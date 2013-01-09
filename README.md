@@ -27,7 +27,7 @@ it, clone this repo and cd into it.  You will need Leiningen 2 installed
 (assuming this is available on your PATH as lein2):
 
 ```bash
-$ git clone ...
+$ git clone https://github.com/TheClimateCorporation/clj-spark.git
 $ cd clj-spark
 $ lein2 deps
 $ lein2 compile
