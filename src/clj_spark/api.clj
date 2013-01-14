@@ -2,6 +2,7 @@
   (:use clj-spark.spark.functions)
   (:refer-clojure :exclude [map reduce count filter first take distinct])
   (:require
+    [clojure.tools.logging :as log]
     [serializable.fn :as sfn]
     [clojure.string :as s]
     [clj-spark.util :as util])
@@ -12,9 +13,9 @@
 ; Helpers
 
 (defn spark-context
-  [& {:keys [master job-name]}]
-  ;JavaSparkContext(master: String, jobName: String, sparkHome: String, jars: Array[String], environment: Map[String, String])
-  (JavaSparkContext. master job-name))
+  [& {:keys [master job-name spark-home jars environment]}]
+  (log/warn "JavaSparkContext" master job-name spark-home jars environment)
+  (JavaSparkContext. master job-name spark-home (into-array String (s/split jars #",")) environment))
 
 (defn- untuple
   [t]

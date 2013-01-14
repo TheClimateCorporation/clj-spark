@@ -1,21 +1,40 @@
 (ns clj-spark.examples.query
   (:refer-clojure :exclude [fn])
   (:use
+    [clojure.tools.cli :only [cli]]
     serializable.fn
     clj-spark.util)
   (:require
+    [clojure.string :as s]
     [clj-spark.api :as k]
     [clj-spark.examples.extra :as extra]))
 
-; TODO get this from an ENVIRONEMNT variable
-(def spark-home "/usr/local/spark-0.6.1")
-
-(def testfile "test/resources/input.csv")
-
 (defn -main
   [& args]
-  (let [sc
-          (k/spark-context :master "local" :job-name "Simple Job")
+  (let [[{:keys [input master spark-home jars env]} remaining banner]
+          (cli args
+            ["--input" "the input file, a path in local mode, or full hdfs: url for a cluster"
+                       :default "test/resources/input.csv"]
+            ["--master" "The master url (local, local[N], spark://..., mesos://..." :default "local"]
+            ["--spark-home" "Path to the Spark home directory."
+                            :default (or (System/getenv "SPARK_HOME")
+                                         (throw (RuntimeException. "SPARK_HOME or --spark-home must be set")))]
+            ; ["--jars" (str "A comma separated list of JARs to send to the cluster. These can be paths "
+            ;                 "on the local file system or HDFS, HTTP, HTTPS, or FTP URLs.")
+            ;           :parse-fn #(s/split % #",") :default []]
+            ["--jars" (str "A comma separated list of JARs to send to the cluster. These can be paths "
+                            "on the local file system or HDFS, HTTP, HTTPS, or FTP URLs.")
+                      :default []]
+            ["--env" "Environment variables to set on worker nodes (e.g. \"k=v,k=v\")"
+                     :parse-fn #(->> (s/split % #",") (map (fn [s] (s/split s #"="))) (into {}))
+                     :default {}])
+
+        sc
+          (k/spark-context :master master :job-name "Simple Job" :jars jars
+                           :environment env :spark-home spark-home)
+
+        ; Warning: Make sure you use fn and not # for anonymous functions, so that the function
+        ; will be cerated with serializable.fn
 
         extra-rdd
           (->> (extra/get-data)
@@ -24,7 +43,7 @@
                k/cache)
 
         input-rdd
-          (-> (.textFile sc testfile)
+          (-> (.textFile sc input)
               (k/map k/csv-split)
               ; _,policy-id,field-id,_,_,element-id,element-value
               (k/map (k/feach identity as-integer as-long identity identity as-integer as-double))
@@ -36,8 +55,8 @@
               (k/map first)       ; [policy-id field-id]
               k/distinct
 
-              ; Need the 1, b/c there must be some data values to join
-              (k/map #(vector % 1))         ; [[policy-id field-id] 1]
+              ; Need the constant 1, b/c there must be some data values to join
+              (k/map (fn [pf] (vector pf 1)))  ; [[policy-id field-id] 1]
 
               (k/join (-> extra-rdd
                           (k/map (fn [{:keys [policy_id field_id state policy_premium acres]}]
@@ -136,3 +155,7 @@
       (println state cte))
 
     (println "==============")))
+
+(defn command-line? [] (.isAbsolute (java.io.File. *file*)))
+
+(if (command-line?) (apply -main *command-line-args*))

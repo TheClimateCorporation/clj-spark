@@ -1,5 +1,6 @@
 (ns clj-spark.spark.functions
   (:require
+    [clj-spark.util]
     [serializable.fn :as sfn])
   (:import
     scala.Tuple2))
