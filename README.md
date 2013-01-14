@@ -128,11 +128,10 @@ $ cd $SPARK_HOME
 $ KEY_PAIR_NAME=your-keypaid
 $ KEY_PAIR_FILE=~/.ssh/your-keypair-file
 
-```
+# Launch
+$ ec2/spark-ec2 -k $KEY_PAIR_NAME -i $KEY_PAIR_FILE -s 1 launch marcs-test
 
-ec2/spark-ec2 -k $KEY_PAIR_NAME -i $KEY_PAIR_FILE -s 1 launch marcs-test
-
-# it start a cluster with 2 m1.large nodes
+# It starts a cluster with 2 m1.large nodes
 # Wait for the script to finish and find the hostname of the master, and set it:
 
 SPARK_MASTER=ec2-184-73-18-84.compute-1.amazonaws.com
