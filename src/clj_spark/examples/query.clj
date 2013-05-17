@@ -19,12 +19,9 @@
             ["--spark-home" "Path to the Spark home directory."
                             :default (or (System/getenv "SPARK_HOME")
                                          (throw (RuntimeException. "SPARK_HOME or --spark-home must be set")))]
-            ; ["--jars" (str "A comma separated list of JARs to send to the cluster. These can be paths "
-            ;                 "on the local file system or HDFS, HTTP, HTTPS, or FTP URLs.")
-            ;           :parse-fn #(s/split % #",") :default []]
             ["--jars" (str "A comma separated list of JARs to send to the cluster. These can be paths "
                             "on the local file system or HDFS, HTTP, HTTPS, or FTP URLs.")
-                      :default []]
+                       :parse-fn #(s/split % #",") :default []]
             ["--env" "Environment variables to set on worker nodes (e.g. \"k=v,k=v\")"
                      :parse-fn #(->> (s/split % #",") (map (fn [s] (s/split s #"="))) (into {}))
                      :default {}])

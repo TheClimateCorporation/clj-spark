@@ -15,7 +15,7 @@
 (defn spark-context
   [& {:keys [master job-name spark-home jars environment]}]
   (log/warn "JavaSparkContext" master job-name spark-home jars environment)
-  (JavaSparkContext. master job-name spark-home (into-array String (s/split jars #",")) environment))
+  (JavaSparkContext. master job-name spark-home (into-array String jars) environment))
 
 (defn- untuple
   [t]
